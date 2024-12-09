@@ -35,6 +35,9 @@ async function activate(context) {
             watchCSVFile(csvFilePath);
 
             vscode.window.showInformationMessage(`Descriptions loaded from: ${csvFilePath}`);
+
+            // Manually trigger an update of the inlay hints
+            updateInlayHints();
         } else {
             vscode.window.showErrorMessage('No CSV file selected.');
         }
@@ -54,40 +57,43 @@ async function activate(context) {
     watchCSVFile(defaultCSVPath);
 
     // Register inlay hints provider
-    const provider = vscode.languages.registerInlayHintsProvider('*', {
-        provideInlayHints(document, range, token) {
-            const hints = [];
-            const regex = /\bDO\[(\d+)\]/g; // Matches DO[x] and captures the number inside []
+const provider = vscode.languages.registerInlayHintsProvider('*', {
+    provideInlayHints(document, range, token) {
+        const hints = [];
+        const regex = /\bdo\[(\d+)\]/gi; // Matches DO[x] and captures the number inside [] (case-insensitive)
 
-            // Iterate through each line in the document
-            for (let lineNum = range.start.line; lineNum <= range.end.line; lineNum++) {
-                const line = document.lineAt(lineNum);
-                let match;
+        // Iterate through each line in the document
+        for (let lineNum = range.start.line; lineNum <= range.end.line; lineNum++) {
+            const line = document.lineAt(lineNum);
+            let match;
 
-                // Match DO[x] patterns in the line
-                while ((match = regex.exec(line.text)) !== null) {
-                    const fullMatch = match[0]; // Full match like "DO[1]"
-                    const matchStart = match.index;
-                    const matchEnd = matchStart + fullMatch.length;
+            // Match DO[x] patterns in the line (case-insensitive)
+            while ((match = regex.exec(line.text.toLowerCase())) !== null) {
+                const fullMatch = match[0]; // Full match like "DO[1]" or "do[1]"
+                const matchStart = match.index;
+                const matchEnd = matchStart + fullMatch.length;
+                
+                if (descriptions[fullMatch]) {
+                    console.log('Hint loaded:', fullMatch);
+                    // Position the hint just inside the closing bracket
+                    const hintPosition = new vscode.Position(lineNum, matchEnd - 1);
 
-                    if (descriptions[fullMatch]) {
-                        // Position the hint just inside the closing bracket
-                        const hintPosition = new vscode.Position(lineNum, matchEnd - 1);
-
-                        // Create an inlay hint
-                        hints.push(
-                            new vscode.InlayHint(
-                                hintPosition, // Position inside the closing bracket
-                                ` ${descriptions[fullMatch]}`, // Hint content
-                                vscode.InlayHintKind.Type // Type of hint
-                            )
-                        );
-                    }
+                    // Create an inlay hint
+                    hints.push(
+                        new vscode.InlayHint(
+                            hintPosition, // Position inside the closing bracket
+                            ` ${descriptions[fullMatch]}`, // Hint content
+                            vscode.InlayHintKind.Type // Type of hint
+                        )
+                    );
+                }else{
+                    console.log('Hint Not loaded:', fullMatch);
                 }
             }
-            return hints;
         }
-    });
+        return hints;
+    }
+});
 
     // Add all commands and the inlay hint provider to the context subscriptions
     context.subscriptions.push(uploadFileCommand, uploadFolderCommand, selectCSVFileCommand, provider);
@@ -110,10 +116,13 @@ async function loadDescriptions(csvFilePath) {
         fs.createReadStream(csvFilePath)
             .pipe(csv())
             .on('data', (row) => {
-                console.log('Row read from CSV:', row);
-
+                //console.log('row.Key:', row.Key);
+                //console.log('row.Description:', row.Description);
+                
                 if (row.Key && row.Description) {
-                    newDescriptions[row.Key] = row.Description;
+                    newDescriptions[row.Key.toLowerCase()] = row.Description;
+                    //console.log('newDescriptions: ', newDescriptions);
+                    
                 }
             })
             .on('end', () => {
@@ -136,6 +145,9 @@ function watchCSVFile(csvFilePath) {
             // Reload descriptions from the CSV file
             descriptions = await loadDescriptions(csvFilePath);
             vscode.window.showInformationMessage('CSV file updated. Descriptions reloaded.');
+
+            // Manually trigger an update of the inlay hints
+            updateInlayHints();
         }
     });
 }
@@ -157,6 +169,17 @@ async function selectCSVFile() {
     return null; // No file selected
 }
 
+// Force an update of the inlay hints
+function updateInlayHints() {
+    const editor = vscode.window.activeTextEditor;
+    if (editor) {
+        // This will force a re-calculation of inlay hints
+        editor.document.save().then(() => {
+            // After saving, the inlay hints should update automatically
+            vscode.window.showInformationMessage('Inlay hints updated.');
+        });
+    }
+}
 
 //*****************************************************************
 //* This COde Works*/

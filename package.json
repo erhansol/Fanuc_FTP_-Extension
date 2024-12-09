@@ -2,7 +2,8 @@
   "name": "robot-ftp",
   "displayName": "Robot FTP",
   "description": "VSCODE extension to FTP *.ls file to Fanuc Robot",
-  "version": "0.0.2",
+  "publisher": "CoreyApplegate",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.95.0"
   },
@@ -40,7 +41,7 @@
       },
       {
         "command": "extension.selectCSVFile",
-        "title": "select CSV File",
+        "title": "select CSV File For Hints",
         "icon": {
           "light": "./src/images/icon-light.png",
           "dark": "./src/images/icon-dark.png"
@@ -61,7 +62,6 @@
         },
         {
           "command": "extension.selectCSVFile",
-          "when": "explorerResourceIsFolder",
           "group": "navigation"
         }
       ]
