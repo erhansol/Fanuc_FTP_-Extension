@@ -1,7 +1,7 @@
 {
   "name": "robot-ftp",
   "displayName": "Robot FTP",
-  "description": "",
+  "description": "VSCODE extension to FTP *.ls file to Fanuc Robot",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.95.0"
@@ -10,16 +10,24 @@
     "Other"
   ],
   "activationEvents": [],
-  "main": "./extension.js",
+  "main": "./src/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "extension.uploadFileToRobot",
-        "title": "Upload .LS File to Robot"
+        "title": "Upload .LS File to Robot",
+        "icon": {
+          "light": "./src/images/icon-light.png",
+          "dark": "./src/images/icon-dark.png"
+        }
       },
       {
         "command": "extension.uploadFolderToRobot",
-        "title": "Upload Folder to Robot"
+        "title": "Upload Folder to Robot",
+        "icon": {
+          "light": "./src/images/icon-light.png",
+          "dark": "./src/images/icon-dark.png"
+        }
       }
     ],
     "menus": {
@@ -52,5 +60,9 @@
   },
   "dependencies": {
     "basic-ftp": "^5.0.5"
+  },
+   "icon": "src/images/icon.png", "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/your-repository"
   }
 }
