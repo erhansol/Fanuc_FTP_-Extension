@@ -40,11 +40,11 @@ function activate(context) {
         }
 
         if (!uri || !uri.fsPath) {
-            vscode.window.showErrorMessage('Please select a folder containing .LS files.');
+            vscode.window.showErrorMessage('Please select a file or folder to upload.');
             return;
         }
 
-        const folderPath = uri.fsPath;
+        const selectedPath = uri.fsPath;
 
         try {
             const client = new ftp.Client();
@@ -73,33 +73,35 @@ function activate(context) {
             console.log("BINARY: Switching to binary mode.");
             await client.send("TYPE I");  // Ensure binary mode
 
-            // MPUT *.LS: Upload all `.LS` files in the folder
-            console.log("MPUT *.LS: Uploading all .LS files from the folder.");
-            
-            // Ensure the path is a directory before listing files
-            const stats = await vscode.workspace.fs.stat(vscode.Uri.file(folderPath));
+            // Check if the selected path is a directory or a file
+            const stats = await vscode.workspace.fs.stat(vscode.Uri.file(selectedPath));
 
-            if (stats.type !== vscode.FileType.Directory) {
-                vscode.window.showErrorMessage('The provided path is not a directory.');
+            if (stats.type === vscode.FileType.Directory) {
+                // If it's a directory, upload all .LS files inside it
+                console.log(`MPUT *.LS: Uploading all .LS files from the directory.`);
+                const files = await vscode.workspace.fs.readDirectory(vscode.Uri.file(selectedPath));
+                const lsFiles = files.filter(([name, type]) => type === vscode.FileType.File && name.endsWith('.LS'));
+
+                // Upload each .LS file
+                for (const [fileName] of lsFiles) {
+                    const localPath = path.join(selectedPath, fileName);
+                    console.log(`Uploading file: ${fileName}`);
+                    await client.uploadFrom(localPath, fileName);  // Upload the file
+                }
+            } else if (stats.type === vscode.FileType.File && selectedPath.endsWith('.LS')) {
+                // If it's a file, upload the selected .LS file
+                console.log(`MPUT ${path.basename(selectedPath)}: Uploading the selected .LS file.`);
+                await client.uploadFrom(selectedPath, path.basename(selectedPath));  // Upload the selected file
+            } else {
+                vscode.window.showErrorMessage('Please select a valid .LS file or a directory containing .LS files.');
                 return;
-            }
-
-            // Now that we know it's a directory, read its contents
-            const files = await vscode.workspace.fs.readDirectory(vscode.Uri.file(folderPath));
-            const lsFiles = files.filter(([name, type]) => type === vscode.FileType.File && name.endsWith('.LS'));
-
-            // Upload all .LS files
-            for (const [fileName] of lsFiles) {
-                const localPath = path.join(folderPath, fileName);
-                console.log(`Uploading file: ${fileName}`);
-                await client.uploadFrom(localPath, fileName);  // Ensure each file is uploaded before moving to the next
             }
 
             // BYE: Disconnect from the server
             console.log("BYE: Closing connection.");
             client.close();
 
-            vscode.window.showInformationMessage(`Files uploaded successfully to ${ipAddress}`);
+            vscode.window.showInformationMessage(`File(s) uploaded successfully to ${ipAddress}`);
         } catch (error) {
             vscode.window.showErrorMessage(`Error: ${error.message}`);
         }

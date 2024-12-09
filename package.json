@@ -22,7 +22,13 @@
         "explorer/context": [
             {
                 "command": "extension.uploadToRobot",
+                "when": "resourceFilename =~ /\\.(ls|Ls|lS|LS)$/",
                 "group": "navigation"
+            },
+            {
+              "command": "extension.uploadToRobot",
+              "when": "resourceLangId == 'folder'",
+              "group": "navigation"
             }
         ]
     }
