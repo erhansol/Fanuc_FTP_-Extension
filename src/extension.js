@@ -2,6 +2,7 @@ const vscode = require('vscode');
 const ftp = require('basic-ftp');
 const path = require('path');
 
+
 function activate(context) {
     // Command for uploading a file
     let uploadFileCommand = vscode.commands.registerCommand('extension.uploadFileToRobot', async (uri) => {
@@ -13,7 +14,52 @@ function activate(context) {
         await uploadToRobot(uri, true); // true indicates it's a folder
     });
 
-    context.subscriptions.push(uploadFileCommand, uploadFolderCommand);
+     // Define the descriptions directly in the code
+     const descriptions = {
+        "DO":"Digital Output",
+        "DO[1]": "Valve 01",
+        "DO[2]": "Valve 02",
+        "DO[3]": "Valve 03",
+        "DO[4]": "Valve 04"
+    };
+
+      // Register inlay hints provider
+    const provider = vscode.languages.registerInlayHintsProvider('*', {
+        provideInlayHints(document, range, token) {
+            const hints = [];
+            const regex = /\bDO\[(\d+)\]/g; // Matches DO[x] and captures the number inside []
+
+            // Iterate through each line in the document
+            for (let lineNum = range.start.line; lineNum <= range.end.line; lineNum++) {
+                const line = document.lineAt(lineNum);
+                let match;
+
+                // Match DO[x] patterns in the line
+                while ((match = regex.exec(line.text)) !== null) {
+                    const fullMatch = match[0]; // Full match like "DO[1]"
+                    const matchStart = match.index;
+                    const matchEnd = matchStart + fullMatch.length;
+
+                    if (descriptions[fullMatch]) {
+                        // Position the hint just inside the closing bracket
+                        const hintPosition = new vscode.Position(lineNum, matchEnd - 1);
+
+                        // Create an inlay hint
+                        hints.push(
+                            new vscode.InlayHint(
+                                hintPosition, // Position inside the closing bracket
+                                ` ${descriptions[fullMatch]}`, // Hint content
+                                vscode.InlayHintKind.Type // Type of hint
+                            )
+                        );
+                    }
+                }
+            }
+            return hints;
+        }
+    });
+
+    context.subscriptions.push(uploadFileCommand, uploadFolderCommand,provider);
 }
 
 async function uploadToRobot(uri, isFolder) {
