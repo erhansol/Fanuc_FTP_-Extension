@@ -37,6 +37,14 @@
           "light": "./src/images/icon-light.png",
           "dark": "./src/images/icon-dark.png"
         }
+      },
+      {
+        "command": "extension.selectCSVFile",
+        "title": "select CSV File",
+        "icon": {
+          "light": "./src/images/icon-light.png",
+          "dark": "./src/images/icon-dark.png"
+        }
       }
     ],
     "menus": {
@@ -48,6 +56,11 @@
         },
         {
           "command": "extension.uploadFolderToRobot",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation"
+        },
+        {
+          "command": "extension.selectCSVFile",
           "when": "explorerResourceIsFolder",
           "group": "navigation"
         }

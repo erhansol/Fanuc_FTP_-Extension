@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const csv = require('csv-parser'); // Install csv-parser for reading CSV files
 
-
+// Make the activate function async
 async function activate(context) {
     // Command for uploading a file
     let uploadFileCommand = vscode.commands.registerCommand('extension.uploadFileToRobot', async (uri) => {
@@ -16,71 +16,91 @@ async function activate(context) {
         await uploadToRobot(uri, true); // true indicates it's a folder
     });
 
-     // Listen for the active text editor to ensure a document is open
-     const editor = vscode.window.activeTextEditor;
-     if (!editor) {
-         console.log('No active editor found.');
-         return;
-     }
- 
-     // Load descriptions from the CSV file in the same folder as the open document
-     descriptions = await loadDescriptions(editor.document);
- 
-     // Watch for changes in the CSV file
-     watchCSVFile(editor.document);
- 
-     // Register inlay hints provider
-     const provider = vscode.languages.registerInlayHintsProvider('*', {
-         provideInlayHints(document, range, token) {
-             const hints = [];
-             const regex = /\bDO\[(\d+)\]/g; // Matches DO[x] and captures the number inside []
- 
-             // Iterate through each line in the document
-             for (let lineNum = range.start.line; lineNum <= range.end.line; lineNum++) {
-                 const line = document.lineAt(lineNum);
-                 let match;
- 
-                 // Match DO[x] patterns in the line
-                 while ((match = regex.exec(line.text)) !== null) {
-                     const fullMatch = match[0]; // Full match like "DO[1]"
-                     const matchStart = match.index;
-                     const matchEnd = matchStart + fullMatch.length;
- 
-                     if (descriptions[fullMatch]) {
-                         // Position the hint just inside the closing bracket
-                         const hintPosition = new vscode.Position(lineNum, matchEnd - 1);
- 
-                         // Create an inlay hint
-                         hints.push(
-                             new vscode.InlayHint(
-                                 hintPosition, // Position inside the closing bracket
-                                 ` ${descriptions[fullMatch]}`, // Hint content
-                                 vscode.InlayHintKind.Type // Type of hint
-                             )
-                         );
-                     }
-                 }
-             }
-             return hints;
-         }
-     });
+    // Command for selecting CSV file
+    let selectCSVFileCommand = vscode.commands.registerCommand('extension.selectCSVFile', async () => {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            console.log('No active editor found.');
+            return;
+        }
 
-    context.subscriptions.push(uploadFileCommand, uploadFolderCommand,provider);
+        // Allow the user to choose a CSV file
+        const csvFilePath = await selectCSVFile();
+
+        if (csvFilePath) {
+            // Load descriptions from the selected CSV file
+            descriptions = await loadDescriptions(csvFilePath);
+
+            // Watch for changes in the selected CSV file
+            watchCSVFile(csvFilePath);
+
+            vscode.window.showInformationMessage(`Descriptions loaded from: ${csvFilePath}`);
+        } else {
+            vscode.window.showErrorMessage('No CSV file selected.');
+        }
+    });
+
+    // Listen for the active text editor to ensure a document is open
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+        console.log('No active editor found.');
+        return;
+    }
+
+    // Load descriptions from the default CSV file located in the same folder as the document
+    const directory = path.dirname(editor.document.uri.fsPath); // Get the directory of the current open document
+    const defaultCSVPath = path.join(directory, 'descriptions.csv');
+    descriptions = await loadDescriptions(defaultCSVPath);
+    watchCSVFile(defaultCSVPath);
+
+    // Register inlay hints provider
+    const provider = vscode.languages.registerInlayHintsProvider('*', {
+        provideInlayHints(document, range, token) {
+            const hints = [];
+            const regex = /\bDO\[(\d+)\]/g; // Matches DO[x] and captures the number inside []
+
+            // Iterate through each line in the document
+            for (let lineNum = range.start.line; lineNum <= range.end.line; lineNum++) {
+                const line = document.lineAt(lineNum);
+                let match;
+
+                // Match DO[x] patterns in the line
+                while ((match = regex.exec(line.text)) !== null) {
+                    const fullMatch = match[0]; // Full match like "DO[1]"
+                    const matchStart = match.index;
+                    const matchEnd = matchStart + fullMatch.length;
+
+                    if (descriptions[fullMatch]) {
+                        // Position the hint just inside the closing bracket
+                        const hintPosition = new vscode.Position(lineNum, matchEnd - 1);
+
+                        // Create an inlay hint
+                        hints.push(
+                            new vscode.InlayHint(
+                                hintPosition, // Position inside the closing bracket
+                                ` ${descriptions[fullMatch]}`, // Hint content
+                                vscode.InlayHintKind.Type // Type of hint
+                            )
+                        );
+                    }
+                }
+            }
+            return hints;
+        }
+    });
+
+    // Add all commands and the inlay hint provider to the context subscriptions
+    context.subscriptions.push(uploadFileCommand, uploadFolderCommand, selectCSVFileCommand, provider);
 }
 
-let descriptions = {}; // This will store the descriptions
+let descriptions = {}; // Store the descriptions
 
-function loadDescriptions(document) {
+// Function to load descriptions from the CSV file
+async function loadDescriptions(csvFilePath) {
     return new Promise((resolve, reject) => {
         const newDescriptions = {};
-        
-        // Get the directory of the currently open document
-        const csvFilePath = path.join(path.dirname(document.uri.fsPath), 'descriptions.csv');
-        
-        // Log the file path to ensure it's correct
-        console.log(`Looking for CSV file at: ${csvFilePath}`);
 
-        // Check if the file exists
+        // Check if the CSV file exists
         if (!fs.existsSync(csvFilePath)) {
             console.error(`CSV file not found at ${csvFilePath}`);
             return resolve(newDescriptions); // Return empty descriptions if file doesn't exist
@@ -90,7 +110,6 @@ function loadDescriptions(document) {
         fs.createReadStream(csvFilePath)
             .pipe(csv())
             .on('data', (row) => {
-                // Log the row data to see what’s being read
                 console.log('Row read from CSV:', row);
 
                 if (row.Key && row.Description) {
@@ -108,20 +127,40 @@ function loadDescriptions(document) {
     });
 }
 
-// Watch the file for changes
-function watchCSVFile(document) {
-    const csvFilePath = path.join(path.dirname(document.uri.fsPath), 'descriptions.csv');
-
-    // Watch for changes to the CSV file
+// Watch for changes in the CSV file
+function watchCSVFile(csvFilePath) {
+    // Watch the CSV file for changes
     fs.watch(csvFilePath, { persistent: true }, async (eventType) => {
         if (eventType === 'change') {
             console.log('CSV file has been modified. Reloading data...');
-            // Reload descriptions from the CSV
-            descriptions = await loadDescriptions(document);
+            // Reload descriptions from the CSV file
+            descriptions = await loadDescriptions(csvFilePath);
+            vscode.window.showInformationMessage('CSV file updated. Descriptions reloaded.');
         }
     });
 }
 
+// Function to allow users to select a CSV file
+async function selectCSVFile() {
+    const selectedFileUri = await vscode.window.showOpenDialog({
+        canSelectFiles: true,
+        canSelectFolders: false,
+        filters: {
+            'CSV Files': ['csv']
+        }
+    });
+
+    if (selectedFileUri && selectedFileUri.length > 0) {
+        return selectedFileUri[0].fsPath;
+    }
+
+    return null; // No file selected
+}
+
+
+//*****************************************************************
+//* This COde Works*/
+//*****************************************************************
 
 async function uploadToRobot(uri, isFolder) {
     const defaultIp = "192.168.10.124";
