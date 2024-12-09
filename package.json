@@ -10,7 +10,9 @@
     "Other",
     "Snippets"
   ],
-  "activationEvents": ["*"],
+  "activationEvents": [
+    "*"
+  ],
   "main": "./src/extension.js",
   "contributes": {
     "snippets": [
@@ -66,12 +68,13 @@
     "eslint": "^9.13.0"
   },
   "dependencies": {
-    "basic-ftp": "^5.0.5"
+    "basic-ftp": "^5.0.5",
+    "csv-parser": "^3.0.0"
   },
-   "icon": "src/images/icon.png", 
-   "license": "MIT",
-   "repository": {
+  "icon": "src/images/icon.png",
+  "license": "MIT",
+  "repository": {
     "type": "git",
     "url": "https://github.com/cpapplefamily/Fanuc_FTP_-Extension"
-  }  
+  }
 }
