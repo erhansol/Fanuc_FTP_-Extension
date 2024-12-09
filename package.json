@@ -2,7 +2,8 @@
   "name": "robot-ftp",
   "displayName": "Robot FTP",
   "description": "VSCODE extension to FTP *.ls file to Fanuc Robot",
-  "version": "0.0.2",
+  "publisher": "CoreyApplegate",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.95.0"
   },
@@ -10,7 +11,9 @@
     "Other",
     "Snippets"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "*"
+  ],
   "main": "./src/extension.js",
   "contributes": {
     "snippets": [
@@ -35,6 +38,14 @@
           "light": "./src/images/icon-light.png",
           "dark": "./src/images/icon-dark.png"
         }
+      },
+      {
+        "command": "extension.selectCSVFile",
+        "title": "select CSV File For Hints",
+        "icon": {
+          "light": "./src/images/icon-light.png",
+          "dark": "./src/images/icon-dark.png"
+        }
       }
     ],
     "menus": {
@@ -47,6 +58,10 @@
         {
           "command": "extension.uploadFolderToRobot",
           "when": "explorerResourceIsFolder",
+          "group": "navigation"
+        },
+        {
+          "command": "extension.selectCSVFile",
           "group": "navigation"
         }
       ]
@@ -66,12 +81,13 @@
     "eslint": "^9.13.0"
   },
   "dependencies": {
-    "basic-ftp": "^5.0.5"
+    "basic-ftp": "^5.0.5",
+    "csv-parser": "^3.0.0"
   },
-   "icon": "src/images/icon.png", 
-   "license": "MIT",
-   "repository": {
+  "icon": "src/images/icon.png",
+  "license": "MIT",
+  "repository": {
     "type": "git",
     "url": "https://github.com/cpapplefamily/Fanuc_FTP_-Extension"
-  }  
+  }
 }
