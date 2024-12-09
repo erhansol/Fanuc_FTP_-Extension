@@ -13,24 +13,28 @@
   "main": "./extension.js",
   "contributes": {
     "commands": [
-        {
-            "command": "extension.uploadToRobot",
-            "title": "Upload to Robot"
-        }
+      {
+        "command": "extension.uploadFileToRobot",
+        "title": "Upload .LS File to Robot"
+      },
+      {
+        "command": "extension.uploadFolderToRobot",
+        "title": "Upload Folder to Robot"
+      }
     ],
     "menus": {
-        "explorer/context": [
-            {
-                "command": "extension.uploadToRobot",
-                "when": "resourceFilename =~ /\\.(ls|Ls|lS|LS)$/",
-                "group": "navigation"
-            },
-            {
-              "command": "extension.uploadToRobot",
-              "when": "resourceLangId == 'folder'",
-              "group": "navigation"
-            }
-        ]
+      "explorer/context": [
+        {
+          "command": "extension.uploadFileToRobot",
+          "when": "resourceFilename =~ /\\.(ls|Ls|lS|LS)$/",
+          "group": "navigation"
+        },
+        {
+          "command": "extension.uploadFolderToRobot",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation"
+        }
+      ]
     }
   },
   "scripts": {
