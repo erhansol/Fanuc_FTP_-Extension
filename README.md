@@ -22,6 +22,10 @@ None at this time
 
 Initial Release
 
+### 0.0.2
+
+Added Snippets
+
 ### 0.0.1
 
 Initial release of 0.0.1
