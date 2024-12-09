@@ -2,16 +2,23 @@
   "name": "robot-ftp",
   "displayName": "Robot FTP",
   "description": "VSCODE extension to FTP *.ls file to Fanuc Robot",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.95.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Snippets"
   ],
   "activationEvents": [],
   "main": "./src/extension.js",
   "contributes": {
+    "snippets": [
+      {
+        "language": "fanuctp",
+        "path": "./snippets/snippets.code-snippets"
+      }
+    ],
     "commands": [
       {
         "command": "extension.uploadFileToRobot",
