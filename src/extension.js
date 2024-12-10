@@ -41,22 +41,9 @@ async function activate(context) {
         const destinationUri = destinationFolder[0];
         await f_downloadFromRobot(destinationUri, true, ".ls", "LS"); // Pass true for folder operations
     });
+    
     const updateLsFilesFromRobot_Function = vscode.commands.registerCommand("extension.updateFilesFromRobotLsFiles", async () => {
-        // Prompt the user to select a folder
-        const destinationFolder = await vscode.window.showOpenDialog({
-            canSelectFiles: false,
-            canSelectFolders: true,
-            canSelectMany: false,
-            openLabel: "Select Destination Folder"
-        });
-
-        if (!destinationFolder || destinationFolder.length === 0) {
-            vscode.window.showErrorMessage("You must select a destination folder.");
-            return;
-        }
-
-        const destinationUri = destinationFolder[0];
-        await f_updateFilesFromRobot(destinationUri, true, ".ls", "LS"); // Pass true for folder operations
+        await f_updateFilesFromRobot( true, ".ls", "LS"); // Pass true for folder operations
     });
 
 
@@ -414,7 +401,23 @@ async function f_downloadFromRobot(destinationUri, isFolder, fileType, saveType)
     }
 }
 
-async function f_updateFilesFromRobot(destinationUri, isFolder, fileType, saveType) {
+async function f_updateFilesFromRobot(isFolder, fileType, saveType) {
+    // Get the selected folder in the Explorer window
+    const selectedFolders = await vscode.window.showOpenDialog({
+        canSelectFolders: true,
+        canSelectFiles: false,
+        canSelectMany: false,
+        openLabel: "Select Folder to Save Files"
+    });
+
+    if (!selectedFolders || selectedFolders.length === 0) {
+        vscode.window.showErrorMessage("Please select a folder from the Explorer or via the file picker.");
+        return;
+    }
+
+    // Use the selected folder
+    const destinationPath = selectedFolders[0].fsPath;
+
     const defaultIp = "192.168.10.124";
     const selectedIp = await vscode.window.showQuickPick(
         [
@@ -446,8 +449,6 @@ async function f_updateFilesFromRobot(destinationUri, isFolder, fileType, saveTy
         }
     }
 
-    const destinationPath = destinationUri.fsPath;
-
     try {
         const client = new ftp.Client();
         client.ftp.verbose = true;
@@ -465,27 +466,23 @@ async function f_updateFilesFromRobot(destinationUri, isFolder, fileType, saveTy
         const fileList = await client.list();
 
         // Get the list of files already downloaded (existing in the local folder)
-        const downloadedFiles = new Set(); // Initialize Set without specifying type
+        const downloadedFiles = new Set();
         const existingFiles = fs.readdirSync(destinationPath);
         existingFiles.forEach(file => downloadedFiles.add(file.toLowerCase()));
 
         for (const file of fileList) {
             // If the wildcard "*" is passed, download all files, otherwise filter by extension
             if (file.isFile) {
-                // Check if fileType matches or if all files should be downloaded
                 if (fileType === "*" || file.name.toLowerCase().endsWith(fileType.toLowerCase())) {
-                    // Skip the file if it has already been downloaded
                     if (downloadedFiles.has(file.name.toLowerCase())) {
-                        console.log(`Update File: ${file.name}`);
                         const localPath = path.join(destinationPath, file.name);
-                        console.log(`Downloading new file: ${file.name}`);
+                        console.log(`Updating file: ${file.name}`);
                         await client.downloadTo(localPath, file.name);
                         continue;
                     }else{
-                        console.log(`Skip File Not Found: ${file.name}`);
-
+                        console.log(`File Not in list, skipping: ${file.name}`);
+                        continue;
                     }
-
                 }
             }
         }
