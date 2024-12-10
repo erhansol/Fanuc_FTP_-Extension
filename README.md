@@ -22,6 +22,10 @@ None at this time
 
 Initial Release
 
+### 0.0.4
+
+Get All and Get LS
+
 ### 0.0.3
 
 Added Hint, Reads a CSV file with Key Value pairs to display DIO and other User Descriptions
