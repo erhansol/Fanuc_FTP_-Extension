@@ -6,6 +6,43 @@ const csv = require('csv-parser'); // Install csv-parser for reading CSV files
 
 // Make the activate function async
 async function activate(context) {
+    const downloadAllCommand = vscode.commands.registerCommand("extension.downloadAllFiles", async () => {
+        // Prompt the user to select a folder
+        const destinationFolder = await vscode.window.showOpenDialog({
+            canSelectFiles: false,
+            canSelectFolders: true,
+            canSelectMany: false,
+            openLabel: "Select Destination Folder"
+        });
+
+        if (!destinationFolder || destinationFolder.length === 0) {
+            vscode.window.showErrorMessage("You must select a destination folder.");
+            return;
+        }
+
+        const destinationUri = destinationFolder[0];
+        //await downloadFromRobot(destinationUri, true, ".ls"); // Pass true for folder operations
+        await downloadFromRobot(destinationUri, true, "*", "ALL"); // Pass true for folder operations
+    });
+    const downloadLsCommand = vscode.commands.registerCommand("extension.downloadLsFiles", async () => {
+        // Prompt the user to select a folder
+        const destinationFolder = await vscode.window.showOpenDialog({
+            canSelectFiles: false,
+            canSelectFolders: true,
+            canSelectMany: false,
+            openLabel: "Select Destination Folder"
+        });
+
+        if (!destinationFolder || destinationFolder.length === 0) {
+            vscode.window.showErrorMessage("You must select a destination folder.");
+            return;
+        }
+
+        const destinationUri = destinationFolder[0];
+        await downloadFromRobot(destinationUri, true, ".ls", "LS"); // Pass true for folder operations
+    })
+
+
     // Command for uploading a file
     let uploadFileCommand = vscode.commands.registerCommand('extension.uploadFileToRobot', async (uri) => {
         await uploadToRobot(uri, false); // false indicates it's a single file
@@ -60,7 +97,7 @@ async function activate(context) {
 const provider = vscode.languages.registerInlayHintsProvider('*', {
     provideInlayHints(document, range, token) {
         const hints = [];
-        const regex = /\bdo\[(\d+)\]/gi; // Matches DO[x] and captures the number inside [] (case-insensitive)
+        const regex = /\b(?:do|DI|R|F)\[(\d+)\]/gi;
 
         // Iterate through each line in the document
         for (let lineNum = range.start.line; lineNum <= range.end.line; lineNum++) {
@@ -96,7 +133,7 @@ const provider = vscode.languages.registerInlayHintsProvider('*', {
 });
 
     // Add all commands and the inlay hint provider to the context subscriptions
-    context.subscriptions.push(uploadFileCommand, uploadFolderCommand, selectCSVFileCommand, provider);
+    context.subscriptions.push(uploadFileCommand, uploadFolderCommand, selectCSVFileCommand, provider, downloadAllCommand, downloadLsCommand);
 }
 
 let descriptions = {}; // Store the descriptions
@@ -260,8 +297,177 @@ async function uploadToRobot(uri, isFolder) {
 
         console.log("BYE: Closing connection.");
         client.close();
-
+        
         vscode.window.showInformationMessage(`File(s) uploaded successfully to ${ipAddress}`);
+    } catch (error) {
+        vscode.window.showErrorMessage(`Error: ${error.message}`);
+    }
+}
+
+async function downloadFromRobot(destinationUri, isFolder, fileType, saveType) {
+    const defaultIp = "192.168.10.124";
+    const selectedIp = await vscode.window.showQuickPick(
+        [
+            { label: defaultIp, description: "Default IP address" },
+            { label: "Other", description: "Enter a custom IP address" }
+        ],
+        {
+            placeHolder: 'Select the robot\'s IP address or choose "Other" to enter a custom IP.',
+            canPickMany: false
+        }
+    );
+
+    if (!selectedIp) {
+        vscode.window.showErrorMessage("An IP address selection is required.");
+        return;
+    }
+
+    let ipAddress = selectedIp.label;
+
+    if (ipAddress === "Other") {
+        ipAddress = await vscode.window.showInputBox({
+            prompt: "Enter the robot's IP address",
+            placeHolder: "e.g., 192.168.1.100"
+        });
+
+        if (!ipAddress) {
+            vscode.window.showErrorMessage("Custom IP address is required.");
+            return;
+        }
+    }
+
+    const destinationPath = destinationUri.fsPath;
+
+    // Create a subfolder labeled with today's date and handle existing folders
+    const today = new Date();
+    const baseFolderName = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`+ "-" + saveType;
+    let counter = 1;
+    let folderName = `${baseFolderName}_${String(counter).padStart(2, '0')}`;
+
+    while (fs.existsSync(path.join(destinationPath, folderName))) {
+        folderName = `${baseFolderName}_${String(counter).padStart(2, '0')}`;
+        counter++;
+    }
+
+    const dateFolderPath = path.join(destinationPath, folderName );
+
+    try {
+        // Ensure the folder is created
+        fs.mkdirSync(dateFolderPath, { recursive: true });
+
+        const client = new ftp.Client();
+        client.ftp.verbose = true;
+        await client.access({
+            host: ipAddress,
+            user: "anonymous",
+            password: "anonymous",
+            secure: false
+        });
+
+        vscode.window.showInformationMessage("Connected to the robot.");
+
+        console.log("Fetching files from robot...");
+
+        const fileList = await client.list();
+
+        for (const file of fileList) {
+            // If the wildcard "*" is passed, download all files, otherwise filter by extension
+            if (file.isFile) {
+                if (fileType === "*" || file.name.toLowerCase().endsWith(fileType.toLowerCase())) {
+                    const localPath = path.join(dateFolderPath, file.name);
+
+                    console.log(`Downloading file: ${file.name}`);
+                    await client.downloadTo(localPath, file.name);
+                }
+            }
+        }
+
+        console.log("BYE: Closing connection.");
+        client.close();
+
+        vscode.window.showInformationMessage(`${fileType === "*" ? "All" : fileType} files downloaded successfully to ${dateFolderPath}`);
+    } catch (error) {
+        vscode.window.showErrorMessage(`Error: ${error.message}`);
+    }
+}
+
+async function updateFilesFromRobot(destinationUri, isFolder, fileType) {
+    const defaultIp = "192.168.10.124";
+    const selectedIp = await vscode.window.showQuickPick(
+        [
+            { label: defaultIp, description: "Default IP address" },
+            { label: "Other", description: "Enter a custom IP address" }
+        ],
+        {
+            placeHolder: 'Select the robot\'s IP address or choose "Other" to enter a custom IP.',
+            canPickMany: false
+        }
+    );
+
+    if (!selectedIp) {
+        vscode.window.showErrorMessage("An IP address selection is required.");
+        return;
+    }
+
+    let ipAddress = selectedIp.label;
+
+    if (ipAddress === "Other") {
+        ipAddress = await vscode.window.showInputBox({
+            prompt: "Enter the robot's IP address",
+            placeHolder: "e.g., 192.168.1.100"
+        });
+
+        if (!ipAddress) {
+            vscode.window.showErrorMessage("Custom IP address is required.");
+            return;
+        }
+    }
+
+    const destinationPath = destinationUri.fsPath;
+
+    try {
+        const client = new ftp.Client();
+        client.ftp.verbose = true;
+        await client.access({
+            host: ipAddress,
+            user: "anonymous",
+            password: "anonymous",
+            secure: false
+        });
+
+        vscode.window.showInformationMessage("Connected to the robot.");
+
+        console.log("Fetching files from robot...");
+
+        const fileList = await client.list();
+
+        // Get the list of files already downloaded (existing in the local folder)
+        const downloadedFiles = new Set(); // Initialize Set without specifying type
+        const existingFiles = fs.readdirSync(destinationPath);
+        existingFiles.forEach(file => downloadedFiles.add(file.toLowerCase()));
+
+        for (const file of fileList) {
+            // If the wildcard "*" is passed, download all files, otherwise filter by extension
+            if (file.isFile) {
+                // Check if fileType matches or if all files should be downloaded
+                if (fileType === "*" || file.name.toLowerCase().endsWith(fileType.toLowerCase())) {
+                    // Skip the file if it has already been downloaded
+                    if (downloadedFiles.has(file.name.toLowerCase())) {
+                        console.log(`Skipping already downloaded file: ${file.name}`);
+                        continue;
+                    }
+
+                    const localPath = path.join(destinationPath, file.name);
+                    console.log(`Downloading new file: ${file.name}`);
+                    await client.downloadTo(localPath, file.name);
+                }
+            }
+        }
+
+        console.log("BYE: Closing connection.");
+        client.close();
+
+        vscode.window.showInformationMessage(`${fileType === "*" ? "All" : fileType} files downloaded successfully to ${destinationPath}`);
     } catch (error) {
         vscode.window.showErrorMessage(`Error: ${error.message}`);
     }
