@@ -6,7 +6,7 @@ const csv = require('csv-parser'); // Install csv-parser for reading CSV files
 
 // Make the activate function async
 async function activate(context) {
-    const downloadAllCommand = vscode.commands.registerCommand("extension.downloadAllFiles", async () => {
+    const downloadAll_Function = vscode.commands.registerCommand("extension.downloadAllFiles", async () => {
         // Prompt the user to select a folder
         const destinationFolder = await vscode.window.showOpenDialog({
             canSelectFiles: false,
@@ -21,10 +21,10 @@ async function activate(context) {
         }
 
         const destinationUri = destinationFolder[0];
-        //await downloadFromRobot(destinationUri, true, ".ls"); // Pass true for folder operations
-        await downloadFromRobot(destinationUri, true, "*", "ALL"); // Pass true for folder operations
+        //await f_downloadFromRobot(destinationUri, true, ".ls"); // Pass true for folder operations
+        await f_downloadFromRobot(destinationUri, true, "*", "ALL"); // Pass true for folder operations
     });
-    const downloadLsCommand = vscode.commands.registerCommand("extension.downloadLsFiles", async () => {
+    const downloadLs_Function = vscode.commands.registerCommand("extension.downloadLsFiles", async () => {
         // Prompt the user to select a folder
         const destinationFolder = await vscode.window.showOpenDialog({
             canSelectFiles: false,
@@ -39,22 +39,39 @@ async function activate(context) {
         }
 
         const destinationUri = destinationFolder[0];
-        await downloadFromRobot(destinationUri, true, ".ls", "LS"); // Pass true for folder operations
-    })
+        await f_downloadFromRobot(destinationUri, true, ".ls", "LS"); // Pass true for folder operations
+    });
+    const updateLsFilesFromRobot_Function = vscode.commands.registerCommand("extension.updateFilesFromRobotLsFiles", async () => {
+        // Prompt the user to select a folder
+        const destinationFolder = await vscode.window.showOpenDialog({
+            canSelectFiles: false,
+            canSelectFolders: true,
+            canSelectMany: false,
+            openLabel: "Select Destination Folder"
+        });
+
+        if (!destinationFolder || destinationFolder.length === 0) {
+            vscode.window.showErrorMessage("You must select a destination folder.");
+            return;
+        }
+
+        const destinationUri = destinationFolder[0];
+        await f_updateFilesFromRobot(destinationUri, true, ".ls", "LS"); // Pass true for folder operations
+    });
 
 
     // Command for uploading a file
-    let uploadFileCommand = vscode.commands.registerCommand('extension.uploadFileToRobot', async (uri) => {
-        await uploadToRobot(uri, false); // false indicates it's a single file
+    let uploadFile_Function = vscode.commands.registerCommand('extension.uploadFileToRobot', async (uri) => {
+        await f_uploadToRobot(uri, false); // false indicates it's a single file
     });
 
     // Command for uploading a folder
-    let uploadFolderCommand = vscode.commands.registerCommand('extension.uploadFolderToRobot', async (uri) => {
-        await uploadToRobot(uri, true); // true indicates it's a folder
+    let uploadFolder_Function = vscode.commands.registerCommand('extension.uploadFolderToRobot', async (uri) => {
+        await f_uploadToRobot(uri, true); // true indicates it's a folder
     });
 
     // Command for selecting CSV file
-    let selectCSVFileCommand = vscode.commands.registerCommand('extension.selectCSVFile', async () => {
+    let selectCSVFile_Function = vscode.commands.registerCommand('extension.selectCSVFile', async () => {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
             console.log('No active editor found.');
@@ -133,7 +150,13 @@ const provider = vscode.languages.registerInlayHintsProvider('*', {
 });
 
     // Add all commands and the inlay hint provider to the context subscriptions
-    context.subscriptions.push(uploadFileCommand, uploadFolderCommand, selectCSVFileCommand, provider, downloadAllCommand, downloadLsCommand);
+    context.subscriptions.push( uploadFile_Function, 
+                                uploadFolder_Function, 
+                                selectCSVFile_Function, 
+                                provider, 
+                                downloadAll_Function, 
+                                downloadLs_Function,
+                                updateLsFilesFromRobot_Function);
 }
 
 let descriptions = {}; // Store the descriptions
@@ -222,7 +245,7 @@ function updateInlayHints() {
 //* This COde Works*/
 //*****************************************************************
 
-async function uploadToRobot(uri, isFolder) {
+async function f_uploadToRobot(uri, isFolder) {
     const defaultIp = "192.168.10.124";
     const selectedIp = await vscode.window.showQuickPick(
         [
@@ -304,7 +327,7 @@ async function uploadToRobot(uri, isFolder) {
     }
 }
 
-async function downloadFromRobot(destinationUri, isFolder, fileType, saveType) {
+async function f_downloadFromRobot(destinationUri, isFolder, fileType, saveType) {
     const defaultIp = "192.168.10.124";
     const selectedIp = await vscode.window.showQuickPick(
         [
@@ -391,7 +414,7 @@ async function downloadFromRobot(destinationUri, isFolder, fileType, saveType) {
     }
 }
 
-async function updateFilesFromRobot(destinationUri, isFolder, fileType) {
+async function f_updateFilesFromRobot(destinationUri, isFolder, fileType, saveType) {
     const defaultIp = "192.168.10.124";
     const selectedIp = await vscode.window.showQuickPick(
         [
@@ -453,13 +476,16 @@ async function updateFilesFromRobot(destinationUri, isFolder, fileType) {
                 if (fileType === "*" || file.name.toLowerCase().endsWith(fileType.toLowerCase())) {
                     // Skip the file if it has already been downloaded
                     if (downloadedFiles.has(file.name.toLowerCase())) {
-                        console.log(`Skipping already downloaded file: ${file.name}`);
+                        console.log(`Update File: ${file.name}`);
+                        const localPath = path.join(destinationPath, file.name);
+                        console.log(`Downloading new file: ${file.name}`);
+                        await client.downloadTo(localPath, file.name);
                         continue;
+                    }else{
+                        console.log(`Skip File Not Found: ${file.name}`);
+
                     }
 
-                    const localPath = path.join(destinationPath, file.name);
-                    console.log(`Downloading new file: ${file.name}`);
-                    await client.downloadTo(localPath, file.name);
                 }
             }
         }

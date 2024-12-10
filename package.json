@@ -24,6 +24,10 @@
     ],
     "commands": [
       {
+        "command": "extension.updateFilesFromRobotLsFiles",
+        "title": "Update LS Files from Robot"
+      },
+      {
         "command": "extension.downloadAllFiles",
         "title": "Download ALL Files from Robot"
       },
@@ -79,6 +83,10 @@
         },
         {
           "command": "extension.downloadLsFiles",
+          "group": "fanucNavigation"
+        },
+        {
+          "command": "extension.updateFilesFromRobotLsFiles",
           "group": "fanucNavigation"
         }
       ]
