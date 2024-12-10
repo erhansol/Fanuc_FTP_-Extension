@@ -24,6 +24,19 @@
     ],
     "commands": [
       {
+        "command": "extension.updateFilesFromRobotLsFiles",
+        "title": "Update LS Files from Robot"
+      },
+      {
+        "command": "extension.downloadAllFiles",
+        "title": "Download ALL Files from Robot"
+      },
+      {
+        "command": "extension.downloadLsFiles",
+        "title": "Download LS Files from Robot"
+      },
+  
+      {
         "command": "extension.uploadFileToRobot",
         "title": "Upload .LS File to Robot",
         "icon": {
@@ -41,7 +54,7 @@
       },
       {
         "command": "extension.selectCSVFile",
-        "title": "select CSV File For Hints",
+        "title": "Select CSV File For Hints",
         "icon": {
           "light": "./src/images/icon-light.png",
           "dark": "./src/images/icon-dark.png"
@@ -53,16 +66,28 @@
         {
           "command": "extension.uploadFileToRobot",
           "when": "resourceFilename =~ /\\.(ls|Ls|lS|LS)$/",
-          "group": "navigation"
+          "group": "fanucNavigation"
         },
         {
           "command": "extension.uploadFolderToRobot",
           "when": "explorerResourceIsFolder",
-          "group": "navigation"
+          "group": "fanucNavigation"
         },
         {
           "command": "extension.selectCSVFile",
-          "group": "navigation"
+          "group": "fanucNavigation"
+        },
+        {
+          "command": "extension.downloadAllFiles",
+          "group": "fanucNavigation"
+        },
+        {
+          "command": "extension.downloadLsFiles",
+          "group": "fanucNavigation"
+        },
+        {
+          "command": "extension.updateFilesFromRobotLsFiles",
+          "group": "fanucNavigation"
         }
       ]
     }
