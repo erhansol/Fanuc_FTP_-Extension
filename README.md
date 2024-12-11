@@ -20,6 +20,11 @@ None at this time
 
 ## Release Notes
 
+### 0.0.7
+
+Beter Named Contex Menu Button and 
+Multi Line Snippet
+
 ### 0.0.6
 
 Output Channel Concatinate Issue
