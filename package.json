@@ -25,20 +25,20 @@
     "commands": [
       {
         "command": "extension.updateFilesFromRobotLsFiles",
-        "title": "Update LS Files from Robot"
+        "title": "Get Update LS Folder from Robot"
       },
       {
         "command": "extension.downloadAllFiles",
-        "title": "Download ALL Files from Robot"
+        "title": "Get ALL Files from Robot"
       },
       {
         "command": "extension.downloadLsFiles",
-        "title": "Download LS Files from Robot"
+        "title": "Get All LS Files from Robot"
       },
   
       {
         "command": "extension.uploadFileToRobot",
-        "title": "Upload .LS File to Robot",
+        "title": "Send This LS File to Robot",
         "icon": {
           "light": "./src/images/icon-light.png",
           "dark": "./src/images/icon-dark.png"
@@ -46,7 +46,7 @@
       },
       {
         "command": "extension.uploadFolderToRobot",
-        "title": "Upload Folder to Robot",
+        "title": "Send Folder to Robot",
         "icon": {
           "light": "./src/images/icon-light.png",
           "dark": "./src/images/icon-dark.png"
@@ -66,12 +66,12 @@
         {
           "command": "extension.uploadFileToRobot",
           "when": "resourceFilename =~ /\\.(ls|Ls|lS|LS)$/",
-          "group": "fanucNavigation"
+          "group": "fanucSend"
         },
         {
           "command": "extension.uploadFolderToRobot",
           "when": "explorerResourceIsFolder",
-          "group": "fanucNavigation"
+          "group": "fanucSend"
         },
         {
           "command": "extension.selectCSVFile",
@@ -79,15 +79,15 @@
         },
         {
           "command": "extension.downloadAllFiles",
-          "group": "fanucNavigation"
+          "group": "fanucGet"
         },
         {
           "command": "extension.downloadLsFiles",
-          "group": "fanucNavigation"
+          "group": "fanucGet"
         },
         {
           "command": "extension.updateFilesFromRobotLsFiles",
-          "group": "fanucNavigation"
+          "group": "fanucGet"
         }
       ]
     }
