@@ -4,8 +4,13 @@ const path = require('path');
 const fs = require('fs');
 const csv = require('csv-parser'); // Install csv-parser for reading CSV files
 
+const outputChannel = vscode.window.createOutputChannel("Robot File Sync");
+
+
+
 // Make the activate function async
 async function activate(context) {
+    outputChannel.show();
     const downloadAll_Function = vscode.commands.registerCommand("extension.downloadAllFiles", async () => {
         // Prompt the user to select a folder
         const destinationFolder = await vscode.window.showOpenDialog({
@@ -61,7 +66,7 @@ async function activate(context) {
     let selectCSVFile_Function = vscode.commands.registerCommand('extension.selectCSVFile', async () => {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
-            console.log('No active editor found.');
+            outputChannel.appendLine('No active editor found.');
             return;
         }
 
@@ -87,7 +92,7 @@ async function activate(context) {
     // Listen for the active text editor to ensure a document is open
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
-        console.log('No active editor found.');
+        outputChannel.appendLine('No active editor found.');
         return;
     }
 
@@ -115,7 +120,7 @@ const provider = vscode.languages.registerInlayHintsProvider('*', {
                 const matchEnd = matchStart + fullMatch.length;
                 
                 if (descriptions[fullMatch]) {
-                    console.log('Hint loaded:', fullMatch);
+                    outputChannel.appendLine('Hint loaded:', fullMatch);
                     // Position the hint just inside the closing bracket
                     const hintPosition = new vscode.Position(lineNum, matchEnd - 1);
 
@@ -128,7 +133,7 @@ const provider = vscode.languages.registerInlayHintsProvider('*', {
                         )
                     );
                 }else{
-                    console.log('Hint Not loaded:', fullMatch);
+                    outputChannel.appendLine('Hint Not loaded:', fullMatch);
                 }
             }
         }
@@ -163,17 +168,17 @@ async function loadDescriptions(csvFilePath) {
         fs.createReadStream(csvFilePath)
             .pipe(csv())
             .on('data', (row) => {
-                //console.log('row.Key:', row.Key);
-                //console.log('row.Description:', row.Description);
+                //outputChannel.appendLine('row.Key:', row.Key);
+                //outputChannel.appendLine('row.Description:', row.Description);
                 
                 if (row.Key && row.Description) {
                     newDescriptions[row.Key.toLowerCase()] = row.Description;
-                    //console.log('newDescriptions: ', newDescriptions);
+                    //outputChannel.appendLine('newDescriptions: ', newDescriptions);
                     
                 }
             })
             .on('end', () => {
-                console.log('Descriptions loaded:', newDescriptions);
+                outputChannel.appendLine('Descriptions loaded:', newDescriptions);
                 resolve(newDescriptions);
             })
             .on('error', (err) => {
@@ -188,7 +193,7 @@ function watchCSVFile(csvFilePath) {
     // Watch the CSV file for changes
     fs.watch(csvFilePath, { persistent: true }, async (eventType) => {
         if (eventType === 'change') {
-            console.log('CSV file has been modified. Reloading data...');
+            outputChannel.appendLine('CSV file has been modified. Reloading data...');
             // Reload descriptions from the CSV file
             descriptions = await loadDescriptions(csvFilePath);
             vscode.window.showInformationMessage('CSV file updated. Descriptions reloaded.');
@@ -284,7 +289,7 @@ async function f_uploadToRobot(uri, isFolder) {
 
         vscode.window.showInformationMessage('Connected to the robot.');
 
-        console.log("Sending FTP commands...");
+        outputChannel.appendLine("Sending FTP commands...");
 
         // BYTE: Set binary mode
         await client.send("TYPE I");
@@ -296,16 +301,16 @@ async function f_uploadToRobot(uri, isFolder) {
 
             for (const [fileName] of lsFiles) {
                 const localPath = path.join(selectedPath, fileName);
-                console.log(`Uploading file: ${fileName}`);
+                outputChannel.appendLine(`Uploading file: ${fileName}`);
                 await client.uploadFrom(localPath, fileName);
             }
         } else {
             // If it's a single .LS file
-            console.log(`Uploading file: ${path.basename(selectedPath)}`);
+            outputChannel.appendLine(`Uploading file: ${path.basename(selectedPath)}`);
             await client.uploadFrom(selectedPath, path.basename(selectedPath));
         }
 
-        console.log("BYE: Closing connection.");
+        outputChannel.appendLine("BYE: Closing connection.");
         client.close();
         
         vscode.window.showInformationMessage(`File(s) uploaded successfully to ${ipAddress}`);
@@ -376,7 +381,7 @@ async function f_downloadFromRobot(destinationUri, isFolder, fileType, saveType)
 
         vscode.window.showInformationMessage("Connected to the robot.");
 
-        console.log("Fetching files from robot...");
+        outputChannel.appendLine("Fetching files from robot...");
 
         const fileList = await client.list();
 
@@ -386,13 +391,13 @@ async function f_downloadFromRobot(destinationUri, isFolder, fileType, saveType)
                 if (fileType === "*" || file.name.toLowerCase().endsWith(fileType.toLowerCase())) {
                     const localPath = path.join(dateFolderPath, file.name);
 
-                    console.log(`Downloading file: ${file.name}`);
+                    outputChannel.appendLine(`Downloading file: ${file.name}`);
                     await client.downloadTo(localPath, file.name);
                 }
             }
         }
-
-        console.log("BYE: Closing connection.");
+        
+        outputChannel.appendLine("BYE: Closing connection.");
         client.close();
 
         vscode.window.showInformationMessage(`${fileType === "*" ? "All" : fileType} files downloaded successfully to ${dateFolderPath}`);
@@ -461,7 +466,8 @@ async function f_updateFilesFromRobot(isFolder, fileType, saveType) {
 
         vscode.window.showInformationMessage("Connected to the robot.");
 
-        console.log("Fetching files from robot...");
+        outputChannel.appendLine("Fetching files from robot...");
+        outputChannel.appendLine("Fetching files from robot...");
 
         const fileList = await client.list();
 
@@ -476,18 +482,18 @@ async function f_updateFilesFromRobot(isFolder, fileType, saveType) {
                 if (fileType === "*" || file.name.toLowerCase().endsWith(fileType.toLowerCase())) {
                     if (downloadedFiles.has(file.name.toLowerCase())) {
                         const localPath = path.join(destinationPath, file.name);
-                        console.log(`Updating file: ${file.name}`);
+                        outputChannel.appendLine(`Updating file: ${file.name}`);
                         await client.downloadTo(localPath, file.name);
                         continue;
                     }else{
-                        console.log(`File Not in list, skipping: ${file.name}`);
+                        outputChannel.appendLine(`File Not in list, skipping: ${file.name}`);
                         continue;
                     }
                 }
             }
         }
 
-        console.log("BYE: Closing connection.");
+        outputChannel.appendLine("BYE: Closing connection.");
         client.close();
 
         vscode.window.showInformationMessage(`${fileType === "*" ? "All" : fileType} files downloaded successfully to ${destinationPath}`);
