@@ -58,6 +58,13 @@
         ":  !------------------------ ;"
     ],
     "description": "Main Header"
+    },
+    "Multi Line Text": {
+    "prefix": "--eg:",  // Trigger word for snippets
+    "body": [
+        "--eg: "
+    ],
+    "description": "Multi Line Text"
     }
 }
   
