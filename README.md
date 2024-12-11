@@ -20,6 +20,10 @@ None at this time
 
 ## Release Notes
 
+### 0.0.6
+
+Output Channel Concatinate Issue
+
 ### 0.0.5
 
 Change Console Logs to Output Channel

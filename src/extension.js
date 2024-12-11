@@ -120,7 +120,7 @@ const provider = vscode.languages.registerInlayHintsProvider('*', {
                 const matchEnd = matchStart + fullMatch.length;
                 
                 if (descriptions[fullMatch]) {
-                    outputChannel.appendLine('Hint loaded:', fullMatch);
+                    outputChannel.appendLine('Hint loaded:' + fullMatch);
                     // Position the hint just inside the closing bracket
                     const hintPosition = new vscode.Position(lineNum, matchEnd - 1);
 
@@ -133,7 +133,7 @@ const provider = vscode.languages.registerInlayHintsProvider('*', {
                         )
                     );
                 }else{
-                    outputChannel.appendLine('Hint Not loaded:', fullMatch);
+                    outputChannel.appendLine('Hint Not loaded:' + fullMatch);
                 }
             }
         }
@@ -178,7 +178,7 @@ async function loadDescriptions(csvFilePath) {
                 }
             })
             .on('end', () => {
-                outputChannel.appendLine('Descriptions loaded:', newDescriptions);
+                outputChannel.appendLine('Descriptions loaded:' + newDescriptions);
                 resolve(newDescriptions);
             })
             .on('error', (err) => {
