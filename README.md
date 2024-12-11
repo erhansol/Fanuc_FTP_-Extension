@@ -20,7 +20,9 @@ None at this time
 
 ## Release Notes
 
-Initial Release
+### 0.0.5
+
+Change Console Logs to Output Channel
 
 ### 0.0.4
 
