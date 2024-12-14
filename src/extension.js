@@ -103,7 +103,7 @@ async function activate(context) {
     watchCSVFile(defaultCSVPath);
 
     // Register inlay hints provider
-const provider = vscode.languages.registerInlayHintsProvider('*', {
+    const provider = vscode.languages.registerInlayHintsProvider('*', {
     provideInlayHints(document, range, token) {
         const hints = [];
         const regex = /\b(?:do|DI|R|F)\[(\d+)\]/gi;
@@ -139,8 +139,50 @@ const provider = vscode.languages.registerInlayHintsProvider('*', {
         }
         return hints;
     }
-});
+    });
 
+    const listLsFilesAndInsert_Function = vscode.commands.registerCommand(
+        "extension.listLsFilesAndInsert",
+        async () => {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor) {
+                vscode.window.showErrorMessage("No active editor found.");
+                return;
+            }
+    
+            // Get the directory of the currently open file
+            const currentFilePath = editor.document.uri.fsPath;
+            const currentDir = path.dirname(currentFilePath);
+    
+            // Get all `.ls` files in the same directory
+            const lsFiles = fs.readdirSync(currentDir)
+                .filter(file => file.endsWith('.ls'))
+                .map(file => path.parse(file).name); // Strip the `.ls` extension
+
+            if (lsFiles.length === 0) {
+                 vscode.window.showInformationMessage("No .ls files found in the current directory.");
+                return;
+            }
+    
+            // Show the list of `.ls` files in a selection box
+            const selectedFile = await vscode.window.showQuickPick(lsFiles, {
+                placeHolder: "Select a .ls file to insert its name",
+            });
+    
+            if (!selectedFile) {
+                return; // User canceled the selection
+            }
+    
+            // Insert the selected file name at the cursor position
+            const cursorPosition = editor.selection.active;
+            editor.edit((editBuilder) => {
+                editBuilder.insert(cursorPosition, selectedFile);
+            });
+    
+            vscode.window.showInformationMessage(`Inserted file name: ${selectedFile}`);
+        }
+    );
+    
     // Add all commands and the inlay hint provider to the context subscriptions
     context.subscriptions.push( uploadFile_Function, 
                                 uploadFolder_Function, 
@@ -148,7 +190,8 @@ const provider = vscode.languages.registerInlayHintsProvider('*', {
                                 provider, 
                                 downloadAll_Function, 
                                 downloadLs_Function,
-                                updateLsFilesFromRobot_Function);
+                                updateLsFilesFromRobot_Function,
+                                listLsFilesAndInsert_Function);
 }
 
 let descriptions = {}; // Store the descriptions
