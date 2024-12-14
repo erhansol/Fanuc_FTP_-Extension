@@ -1,52 +1,126 @@
-# robot-ftp README
+# Robot File Sync Extension for Visual Studio Code
 
-Use this Extention to Upload single *.LS files or a directory of *.LS files to your Fanuc Robot
+## Overview
+This Visual Studio Code extension allows you to interact with a Fanuc robot via FTP for uploading and downloading files. It provides several commands to upload files, download files, and update existing files from the robot, as well as manage descriptions from a CSV file. The extension also integrates inlay hints into the editor for quick reference of descriptions related to certain keywords.
 
 ## Features
 
-To DO
+### Download Files:
+- Download all files from the robot.
+- Download `.ls` files from the robot.
+- Update files from the robot into a selected folder.
 
-## Requirements
+### Upload Files:
+- Upload individual files or folders to the robot.
 
-Add Robot Requirments 
+### CSV Descriptions:
+- Select and load a CSV file that contains descriptions for robot programs.
+- Automatically reload the descriptions when the CSV file changes.
 
-## Extension Settings
+### Inlay Hints:
+- The extension provides inlay hints for specific keywords (e.g., `DO[x]` or `DI[x]`) based on descriptions from the CSV file.
 
-None at this time
+### File Insertion:
+- Insert `.ls` file names into the current document by selecting from a list.
 
-## Known Issues
+## Commands
 
-None at this time
+1. **`extension.downloadAllFiles`**
+   - Downloads all files from the robot to a user-selected folder.
 
-## Release Notes
+2. **`extension.downloadLsFiles`**
+   - Downloads all `.ls` files from the robot to a user-selected folder.
 
-### 0.0.7
+3. **`extension.updateFilesFromRobotLsFiles`**
+   - Updates `.ls` files from the robot into a selected folder.
 
-Beter Named Contex Menu Button and 
-Multi Line Snippet
+4. **`extension.uploadFileToRobot`**
+   - Uploads a single file to the robot.
 
-### 0.0.6
+5. **`extension.uploadFolderToRobot`**
+   - Uploads an entire folder to the robot.
 
-Output Channel Concatinate Issue
+6. **`extension.selectCSVFile`**
+   - Prompts the user to select a CSV file containing descriptions. Automatically loads the descriptions and watches for changes.
 
-### 0.0.5
+7. **`extension.listLsFilesAndInsert`**
+   - Lists `.ls` files in the current directory and allows the user to insert the file name into the active editor.
 
-Change Console Logs to Output Channel
+## File Descriptions
+The CSV file used for descriptions should have two columns:
 
-### 0.0.4
+- **Key**: A unique identifier (e.g., `DO[1]` or `DI[1]`).
+- **Description**: A textual description corresponding to the key.
 
-Get All and Get LS
+### Example of the CSV format:
+Key,Description
+DO[1],Digital output 1
+DI[1],Digital input 1
 
-### 0.0.3
+## Setup Instructions
 
-Added Hint, Reads a CSV file with Key Value pairs to display DIO and other User Descriptions
+### Install the Extension:
+Install the extension directly from Visual Studio Code's Extensions Marketplace.
 
-### 0.0.2
+### Configure FTP Settings:
+The extension will prompt for an IP address of the robot. The default IP is 192.168.10.124, but you can also enter a custom IP.
 
-Added Snippets
+### CSV File:
+The extension expects a CSV file with descriptions. You can either use the default descriptions.csv or select a custom CSV file using the extension.selectCSVFile command.
 
-### 0.0.1
+### Commands and Usage:
+Use the commands available in the command palette or keybindings to interact with the robot, upload/download files, or insert descriptions into your code.
 
-Initial release of 0.0.1
+# Snippet Triggers and Descriptions
 
+1. **Set Frames**  
+   - **Trigger**: `set frames`  
+   - **Description**: Set Up Frames
 
+2. **If () THEN**  
+   - **Trigger**: `IF`  
+   - **Description**: IF then, Endif
+
+3. **If () THEN ELSE**  
+   - **Trigger**: `IF`  
+   - **Description**: IF then, Else, Endif
+
+4. **If (Chooser) THEN**  
+   - **Trigger**: `IF`  
+   - **Description**: IF Chooser then, Endif
+
+5. **If (Chooser) THEN ELSE**  
+   - **Trigger**: `IF`  
+   - **Description**: IF Chooser then, Else, Endif
+
+6. **Header**  
+   - **Trigger**: `Header`  
+   - **Description**: Main Header
+
+7. **Multi Line Text**  
+   - **Trigger**: `--eg:`  
+   - **Description**: Multi Line Text
+
+8. **To DO**  
+   - **Trigger**: `To do`  
+   - **Description**: Must Return to Complete
+
+9. **Label**  
+   - **Trigger**: `LBL[]`  
+   - **Description**: Add label
+
+10. **Jump Label**  
+    - **Trigger**: `JMP LBL[]`  
+    - **Description**: Add Jump label
+
+11. **Jump Label With Label**  
+    - **Trigger**: `JMP LBL[]`  
+    - **Description**: Add Jump label
+
+12. **Wait Sec**  
+    - **Trigger**: `WAIT`  
+    - **Description**: Add Jump label
+
+13. **CALL**  
+    - **Trigger**: `CALL `  
+    - **Description**: Call Program
