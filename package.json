@@ -24,6 +24,10 @@
     ],
     "commands": [
       {
+        "command": "extension.listLsFilesAndInsert",
+        "title": "List ls Programs"
+      },
+      {
         "command": "extension.updateFilesFromRobotLsFiles",
         "title": "Get Update LS Folder from Robot"
       },
@@ -61,8 +65,35 @@
         }
       }
     ],
+    "keybindings": [
+      {
+        "command": "extension.listLsFilesAndInsert",
+        "key": "ctrl+shift+l",
+        "mac": "cmd+shift+l",
+        "when": "editorTextFocus"
+      }
+    ],
+    "submenus": [
+      {
+        "id": "MNAutomation.submenu",
+        "label": "MNAutomation"
+      }
+    ],
     "menus": {
+      "editor/context": [
+        {
+          "command": "extension.listLsFilesAndInsert",
+          "group": "fanucHelpers"
+        }
+      ],
       "explorer/context": [
+        {
+          "submenu": "MNAutomation.submenu",
+          "group": "MNAutomation"
+        }
+      ],
+      "MNAutomation.submenu": [
+      
         {
           "command": "extension.uploadFileToRobot",
           "when": "resourceFilename =~ /\\.(ls|Ls|lS|LS)$/",

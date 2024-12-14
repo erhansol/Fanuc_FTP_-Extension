@@ -1,70 +1,152 @@
 {
     "Set Frames": {
-    "prefix": "set frames",  // Trigger word for snippets
-    "body": [
-        ":  !Set Frames ;",
-        ":  UFRAME_NUM=${1:1} ;",
-        ":  UTOOL_NUM=${2:1} ;",
-        ": ;"
-    ],
-    "description": "Set Up Frames"
+        "prefix": "set frames",  // Trigger word for snippets
+        "body": [
+            ":  --eg:   Set Frames ;",
+            ":  UFRAME_NUM=${1:1} ;",
+            ":  UTOOL_NUM=${2:1} ;",
+            ":  ;"
+        ],
+        "description": "Set Up Frames"
     },
+
     "If () THEN": {
-    "prefix": "IF",  // Trigger word for snippets
-    "body": [
-        ":IF () THEN;",
-        ":;",
-        ":ENDIF;"
-    ],
-    "description": "IF then, Endif"
+        "prefix": "IF",  // Trigger word for snippets
+        "body": [
+            ":  !{* $1;",
+            ":  IF () THEN;",
+            ":  --eg:    ;",
+            ":  ;",
+            ":  ENDIF;",
+            ":  !*} ;"
+        ],
+        "description": "IF then, Endif"
     },
+
     "If () THEN ELSE": {
-    "prefix": "IF",  // Trigger word for snippets
-    "body": [
-        ":IF () THEN;",
-        ":;",
-        ":ENDIF;"
-    ],
-    "description": "IF then, Else Endif"
+        "prefix": "IF",  // Trigger word for snippets
+        "body": [
+            ":  !{* $1;",
+            ":  IF () THEN;",
+            ":  --eg:    ;",
+            ":  ;",
+            ":  --eg:}* Else  {;",
+            ":  ELSE;",
+            ":  ;",
+            ":  ;",
+            ":  ENDIF;",
+            ":  !*} ;"
+        ],
+        "description": "IF then, Else Endif"
     },
+
     "If (Chooser) THEN": {
-    "prefix": "IF",  // Trigger word for snippets
-    "body": [
-        ":IF (${1|R[,DO[,DI[|}${2:1}] ${3|=,<,>|} ${4|R[,DO[,DI[|}${5:1}]) THEN;",
-        ":;",
-        ":ENDIF;"
-    ],
-    "description": "IF Chooser then, Endif"
+        "prefix": "IF",  // Trigger word for snippets
+        "body": [
+            ":  !{* $1;",
+            ":  IF (${1|R[,DO[,DI[|}${2:1}] ${3|=,<,>|} ${4|R[,DO[,DI[|}${5:1}]) THEN;",
+            ":  --eg:    ;",
+            ":  ;",
+            ":  ENDIF;",
+            ":  !*} ;"
+        ],
+        "description": "IF Chooser then, Endif"
     },
-      "If (Chooser) THEN ELSE": {
-    "prefix": "IF",  // Trigger word for snippets
-    "body": [
-        ":IF (${1|R[,DO[,DI[|}${2:1}] ${3|=,<,>|} ${4|R[,DO[,DI[|}${5:1}]) THEN;",
-        ":;",
-        ":ELSE;",
-        ":;",
-        ":ENDIF;"
-    ],
-    "description": "IF Chooser then, Else, Endif"
+
+    "If (Chooser) THEN ELSE": {
+        "prefix": "IF",  // Trigger word for snippets
+        "body": [
+            ":  !{* $1;",
+            ":  IF (${1|R[,DO[,DI[|}${2:1}] ${3|=,<,>|} ${4|R[,DO[,DI[|}${5:1}]) THEN;",
+            ":  --eg:    ;",
+            ":  ;",
+            ":  --eg:}* Else  {;",
+            ":  ELSE;",
+            ":  ;",
+            ":  ENDIF;",
+            ":  !*} ;"
+        ],
+        "description": "IF Chooser then, Else, Endif"
     },
+
     "Header": {
-    "prefix": "Header",  // Trigger word for snippets
-    "body": [
-        ":  !------------------------ ;",
-        ":  !-----${1:MAIN PROGRAM}----- ;",
-        ":  !------------------------ ;",
-        ":  !- Minnesota Automation - ;",
-        ":  !----- 262-765-3759 ----- ;",
-        ":  !------------------------ ;"
-    ],
-    "description": "Main Header"
+        "prefix": "Header",  // Trigger word for snippets
+        "body": [
+            ":  !------------------------ ;",
+            ":  !-----${1:MAIN PROGRAM}----- ;",
+            ":  !------------------------ ;",
+            ":  !- Minnesota Automation - ;",
+            ":  !----- 262-765-3759 ----- ;",
+            ":  !------------------------ ;"
+        ],
+        "description": "Main Header"
     },
+
     "Multi Line Text": {
-    "prefix": "--eg:",  // Trigger word for snippets
-    "body": [
-        "--eg: "
-    ],
-    "description": "Multi Line Text"
+        "prefix": "--eg:",  // Trigger word for snippets
+        "body": [
+            "--eg: "
+        ],
+        "description": "Multi Line Text"
+    },
+
+    "To DO": {
+        "prefix": "To do",
+        "body": [
+            ":  !************************ ;",
+            ":  !******** To Do  ******** ;",
+            ":  --eg: ${1:To Do} ;",
+            ":  !************************ ;",
+            ":  ;"
+        ],
+        "description": "Must Return to Complete"
+    },
+
+    "Label": {
+        "prefix": "LBL[]",
+        "body": [
+            ":  LBL[$1:$2] ;",
+            ":  ;"
+        ],
+        "description": "Add label"
+    },
+
+    "Jump Label": {
+        "prefix": "JMP LBL[]",
+        "body": [
+            ":  JMP LBL[$1] ;",
+            ":  ;"
+        ],
+        "description": "Add Jump label"
+    },
+
+    "Jump Label With Label": {
+        "prefix": "JMP LBL[]",
+        "body": [
+            ":  JMP LBL[$1] ;",
+            ":  ;",
+            ":  LBL[$1:$2] ;",
+            ":  ;"
+        ],
+        "description": "Add Jump label"
+    },
+
+    "Wait Sec": {
+        "prefix": "WAIT",
+        "body": [
+            ":  WAIT $1(sec) ;",
+            ":  ;"
+        ],
+        "description": "Add Jump label"
+    },
+
+    "CALL": {
+        "prefix": "CALL ",
+        "body": [
+            ":  CALL $0;",
+            ":  ;"
+        ],
+        "description": "Call Program"
     }
 }
   
