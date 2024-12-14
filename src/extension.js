@@ -118,7 +118,7 @@ async function activate(context) {
                 const fullMatch = match[0]; // Full match like "DO[1]" or "do[1]"
                 const matchStart = match.index;
                 const matchEnd = matchStart + fullMatch.length;
-                
+            
                 if (descriptions[fullMatch]) {
                     outputChannel.appendLine('Hint loaded:' + fullMatch);
                     // Position the hint just inside the closing bracket
@@ -133,7 +133,7 @@ async function activate(context) {
                         )
                     );
                 }else{
-                    outputChannel.appendLine('Hint Not loaded:' + fullMatch);
+                    //outputChannel.appendLine('Hint Not loaded:' + fullMatch);
                 }
             }
         }
@@ -204,7 +204,15 @@ async function loadDescriptions(csvFilePath) {
         // Check if the CSV file exists
         if (!fs.existsSync(csvFilePath)) {
             console.error(`CSV file not found at ${csvFilePath}`);
-            return resolve(newDescriptions); // Return empty descriptions if file doesn't exist
+            outputChannel.appendLine(`CSV file not found at ${csvFilePath}`);
+            
+            // Create a blank CSV file with headers if it doesn't exist
+            const headers = 'Key,Description\n'; // Add headers to the blank CSV file
+            fs.writeFileSync(csvFilePath, headers, 'utf8');
+            console.log(`Blank CSV file with headers created at ${csvFilePath}`);
+            outputChannel.appendLine(`Blank CSV file with headers created at ${csvFilePath}`);
+ 
+             return resolve(newDescriptions); // Return empty descriptions if file doesn't exist
         }
 
         // Read and parse the CSV file
