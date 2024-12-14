@@ -61,8 +61,20 @@
         }
       }
     ],
+    "submenus": [
+      {
+        "id": "MNAutomation.submenu",
+        "label": "MNAutomation"
+      }
+    ],
     "menus": {
       "explorer/context": [
+        {
+          "submenu": "MNAutomation.submenu",
+          "group": "MNAutomation"
+        }
+      ],
+      "MNAutomation.submenu": [
         {
           "command": "extension.uploadFileToRobot",
           "when": "resourceFilename =~ /\\.(ls|Ls|lS|LS)$/",
