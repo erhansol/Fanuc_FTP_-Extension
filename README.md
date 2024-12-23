@@ -124,3 +124,7 @@ Use the commands available in the command palette or keybindings to interact wit
 13. **CALL**  
     - **Trigger**: `CALL `  
     - **Description**: Call Program
+
+## Acknowledgments
+
+This extension's syntax highlighting is based on the work from [TPSyntaxHighlighter](https://github.com/alek5k/TPSyntaxHighlighter). We appreciate the contributions made by the original author. 

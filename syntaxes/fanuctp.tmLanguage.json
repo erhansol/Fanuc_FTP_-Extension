@@ -1,0 +1,104 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Fanuc TP",
+  "scopeName": "source.fanuctp",
+  "fileTypes": [
+    "ls"
+  ],
+  "uuid": "E07EC438-7B75-4437-8AA1-DB94AABBAAAA",
+  "patterns": [
+    {
+      "match": "(\\/PROG).*\\n",
+      "name": "support.class"
+    },
+    {
+      "match": "P?V?A?S?R\\[.*?\\]\\]*",
+      "name": "support.variable"
+    },
+    {
+      "match": "D?R?A?G?U?S?(I|O)\\[.*?\\]\\]*",
+      "name": "support.variable"
+    },
+    {
+      "match": "P?F?\\[.*?\\]\\]*",
+      "name": "support.variable"
+    },
+    {
+      "match": "(TIMER)\\[.*?\\]\\]*",
+      "name": "keyword.control"
+    },
+    {
+      "match": "\\d(\\s)*(\\.)?(\\s)*(%|mm|deg|cm|m|mm|sec)?(\\/(min|sec))?",
+      "name": "constant.numeric"
+    },
+    {
+      "match": "(?<=\\=)\\s*(ON|OFF)",
+      "name": "constant.language"
+    },
+    {
+      "match": "(?<=:)\\s*(J|L|C|A)\\s",
+      "name": "invalid.illegal"
+    },
+    {
+      "match": "(FINE|CNT\\d*)\\s*(INC)?(?=;)",
+      "name": "invalid.illegal"
+    },
+    {
+      "match": "(FINE|CNT\\d*\\s*(INC)?)\\s*(OFFSET|VOFFSET|TOOL_OFFSET)?\\s*(?=,)",
+      "name": "invalid.illegal"
+    },
+    {
+      "match": "\\s*:\\s*!.*;",
+      "name": "comment.line"
+    },
+    {
+      "begin": "\\s*:\\s*--",
+      "end": ";",
+      "name": "comment.block"
+    },
+    {
+      "match": "\\'.*\\'",
+      "name": "string.quoted"
+    },
+    {
+      "match": "\\\".*\\\"",
+      "name": "string.quoted"
+    },
+    {
+      "match": "^\\s*:",
+      "name": "constant.other"
+    },
+    {
+      "match": "(?<=:)\\s*(IF|FOR)(?=(\\s|\\())",
+      "name": "keyword.control"
+    },
+    {
+      "match": "\\b(TO)\\b",
+      "name": "keyword.control"
+    },
+    {
+      "match": "(?<=:)\\s*(ELSE|ENDIF|ENDFOR|END|ABORT)\\s*(?=;)",
+      "name": "keyword.control"
+    },
+    {
+      "match": "THEN\\s*(?=;)",
+      "name": "keyword.control"
+    },
+    {
+      "match": "(JMP\\s*)?LBL\\[.+\\](?=;)",
+      "name": "keyword.control"
+    },
+    {
+      "match": "(?<=:)\\s*(WAIT|VISION(\\s*)(\\S*)|FORCE(\\s*)(\\S*))",
+      "name": "support.function"
+    },
+    {
+      "match": "(CALL|RUN)\\s+[a-zA-Z0-9_]*\\(?",
+      "name": "support.function"
+    },
+    {
+      "match": "(?<=:)\\s*(MESSAGE|UALM)\\[.*\\]\\s*(?=;)",
+      "name": "support.function"
+    }
+  ]
+}
