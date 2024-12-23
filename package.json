@@ -3,7 +3,7 @@
   "displayName": "Robot FTP",
   "description": "VSCODE extension to FTP *.ls file to Fanuc Robot",
   "publisher": "CoreyApplegate",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "engines": {
     "vscode": "^1.95.0"
   },
@@ -108,6 +108,7 @@
       "explorer/context": [
         {
           "submenu": "MNAutomation.submenu",
+          "when": "resourceFilename =~ /\\.(ls|Ls|lS|LS)$/",
           "group": "MNAutomation"
         }
       ],
