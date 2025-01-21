@@ -51,6 +51,10 @@ async function activate(context) {
         await f_updateFilesFromRobot( true, ".ls", "LS"); // Pass true for folder operations
     });
 
+    const updateSelectedFileFromRobot_Function = vscode.commands.registerCommand("extension.updateSelectedFileFromRobot", async (uri) => {
+        await f_updateSelectedFileFromRobot(uri, ".ls", "LS"); // Pass true for folder operations
+    });
+
 
     // Command for uploading a file
     let uploadFile_Function = vscode.commands.registerCommand('extension.uploadFileToRobot', async (uri) => {
@@ -191,6 +195,7 @@ async function activate(context) {
                                 downloadAll_Function, 
                                 downloadLs_Function,
                                 updateLsFilesFromRobot_Function,
+                                updateSelectedFileFromRobot_Function,
                                 listLsFilesAndInsert_Function);
 }
 
@@ -487,6 +492,89 @@ async function f_updateFilesFromRobot(isFolder, fileType, saveType) {
         client.close();
 
         vscode.window.showInformationMessage(`${fileType === "*" ? "All" : fileType} files downloaded successfully to ${destinationPath}`);
+    } catch (error) {
+        vscode.window.showErrorMessage(`Error: ${error.message}`);
+    }
+}
+
+async function f_updateSelectedFileFromRobot(uri, fileType, saveType) {
+    const directoryPath = false ? uri.fsPath : path.dirname(uri.fsPath);
+    // Select the destination folder
+    const selectedFolder = await vscode.window.showOpenDialog({
+        canSelectFolders: true,
+        canSelectFiles: false,
+        canSelectMany: false,
+        openLabel: "Select Folder to Save the File"
+    });
+
+    if (!selectedFolder || selectedFolder.length === 0) {
+        vscode.window.showErrorMessage("Please select a folder from the Explorer or via the file picker.");
+        return;
+    }
+
+    const destinationPath = selectedFolder[0].fsPath;
+
+    let ipAddress;
+    try {
+        // Retrieve IP address using the reusable function
+        ipAddress = await getRobotIp(destinationPath);
+    } catch (error) {
+        vscode.window.showErrorMessage(`Failed to retrieve IP address: ${error.message}`);
+        return;
+    }
+
+    try {
+        const client = new ftp.Client();
+        client.ftp.verbose = true;
+        await client.access({
+            host: ipAddress,
+            user: "anonymous",
+            password: "anonymous",
+            secure: false
+        });
+
+        vscode.window.showInformationMessage("Connected to the robot.");
+
+        const selectedPath = uri.fsPath;
+
+        outputChannel.appendLine(`Uploading (*** Selected ***) file: ${path.basename(selectedPath)}`);
+
+        outputChannel.appendLine("Fetching file list from robot...");
+
+        const fileList = await client.list();
+
+        // Filter files based on the provided fileType
+        const filteredFiles = fileList.filter(file => 
+            file.isFile && (fileType === "*" || file.name.toLowerCase().endsWith(fileType.toLowerCase()))
+        );
+
+        if (filteredFiles.length === 0) {
+            vscode.window.showInformationMessage(`No files of type "${fileType}" found on the robot.`);
+            client.close();
+            return;
+        }
+
+        // Let the user select a file from the filtered list
+        const selectedFile = path.basename(selectedPath)
+        /* const selectedFile = await vscode.window.showQuickPick(
+            filteredFiles.map(file => file.name), 
+            { placeHolder: "Select a file to download from the robot" }
+        ); */
+
+        if (!selectedFile) {
+            vscode.window.showErrorMessage("No file selected.");
+            client.close();
+            return;
+        }
+
+        const localPath = path.join(destinationPath, selectedFile);
+        outputChannel.appendLine(`Downloading file: ${selectedFile}`);
+        await client.downloadTo(localPath, selectedFile);
+
+        outputChannel.appendLine("Download complete.");
+        vscode.window.showInformationMessage(`File "${selectedFile}" downloaded successfully to ${destinationPath}`);
+
+        client.close();
     } catch (error) {
         vscode.window.showErrorMessage(`Error: ${error.message}`);
     }
