@@ -289,38 +289,18 @@ function updateInlayHints() {
 //*****************************************************************
 
 async function f_uploadToRobot(uri, isFolder) {
-    const defaultIp = "192.168.10.124";
-    const selectedIp = await vscode.window.showQuickPick(
-        [
-            { label: defaultIp, description: 'Default IP address' },
-            { label: 'Other', description: 'Enter a custom IP address' }
-        ],
-        {
-            placeHolder: 'Select the robot\'s IP address or choose "Other" to enter a custom IP.',
-            canPickMany: false
-        }
-    );
+    const directoryPath = isFolder ? uri.fsPath : path.dirname(uri.fsPath);
+    let ipAddress;
 
-    if (!selectedIp) {
-        vscode.window.showErrorMessage('An IP address selection is required.');
-        return;
+    try {
+        ipAddress = await getRobotIp(directoryPath);
+        vscode.window.showInformationMessage(`Using IP address: ${ipAddress}`);
+        // Proceed with uploading to the robot using ipAddress
+    } catch (error) {
+        vscode.window.showErrorMessage(error.message);
     }
 
-    let ipAddress = selectedIp.label;
-
-    // Handle custom IP address input
-    if (ipAddress === 'Other') {
-        ipAddress = await vscode.window.showInputBox({
-            prompt: "Enter the robot's IP address",
-            placeHolder: "e.g., 192.168.1.100"
-        });
-
-        if (!ipAddress) {
-            vscode.window.showErrorMessage('Custom IP address is required.');
-            return;
-        }
-    }
-
+    
     if (!uri || !uri.fsPath) {
         vscode.window.showErrorMessage('Please select a file or folder to upload.');
         return;
@@ -371,35 +351,15 @@ async function f_uploadToRobot(uri, isFolder) {
 }
 
 async function f_downloadFromRobot(destinationUri, isFolder, fileType, saveType) {
-    const defaultIp = "192.168.10.124";
-    const selectedIp = await vscode.window.showQuickPick(
-        [
-            { label: defaultIp, description: "Default IP address" },
-            { label: "Other", description: "Enter a custom IP address" }
-        ],
-        {
-            placeHolder: 'Select the robot\'s IP address or choose "Other" to enter a custom IP.',
-            canPickMany: false
-        }
-    );
+    const directoryPath = isFolder ? destinationUri.fsPath : path.dirname(destinationUri.fsPath);
+    let ipAddress;
 
-    if (!selectedIp) {
-        vscode.window.showErrorMessage("An IP address selection is required.");
-        return;
-    }
-
-    let ipAddress = selectedIp.label;
-
-    if (ipAddress === "Other") {
-        ipAddress = await vscode.window.showInputBox({
-            prompt: "Enter the robot's IP address",
-            placeHolder: "e.g., 192.168.1.100"
-        });
-
-        if (!ipAddress) {
-            vscode.window.showErrorMessage("Custom IP address is required.");
-            return;
-        }
+    try {
+        ipAddress = await getRobotIp(directoryPath);
+        vscode.window.showInformationMessage(`Using IP address: ${ipAddress}`);
+        // Proceed with uploading to the robot using ipAddress
+    } catch (error) {
+        vscode.window.showErrorMessage(error.message);
     }
 
     const destinationPath = destinationUri.fsPath;
@@ -472,39 +432,18 @@ async function f_updateFilesFromRobot(isFolder, fileType, saveType) {
     }
 
     // Use the selected folder
-    const destinationPath = selectedFolders[0].fsPath;
+     // Use the selected folder
+     const destinationPath = selectedFolders[0].fsPath;
 
-    const defaultIp = "192.168.10.124";
-    const selectedIp = await vscode.window.showQuickPick(
-        [
-            { label: defaultIp, description: "Default IP address" },
-            { label: "Other", description: "Enter a custom IP address" }
-        ],
-        {
-            placeHolder: 'Select the robot\'s IP address or choose "Other" to enter a custom IP.',
-            canPickMany: false
-        }
-    );
-
-    if (!selectedIp) {
-        vscode.window.showErrorMessage("An IP address selection is required.");
-        return;
-    }
-
-    let ipAddress = selectedIp.label;
-
-    if (ipAddress === "Other") {
-        ipAddress = await vscode.window.showInputBox({
-            prompt: "Enter the robot's IP address",
-            placeHolder: "e.g., 192.168.1.100"
-        });
-
-        if (!ipAddress) {
-            vscode.window.showErrorMessage("Custom IP address is required.");
-            return;
-        }
-    }
-
+     let ipAddress;
+     try {
+         // Retrieve IP address using the reusable function
+         ipAddress = await getRobotIp(destinationPath);
+     } catch (error) {
+         vscode.window.showErrorMessage(`Failed to retrieve IP address: ${error.message}`);
+         return; // Exit the function if IP retrieval fails
+     }
+     
     try {
         const client = new ftp.Client();
         client.ftp.verbose = true;
@@ -552,6 +491,117 @@ async function f_updateFilesFromRobot(isFolder, fileType, saveType) {
         vscode.window.showErrorMessage(`Error: ${error.message}`);
     }
 }
+
+/**
+ * Retrieve or prompt for the robot's IP address.
+ * 
+ * @param {string} directoryPath - The directory path where ip.txt should be located.
+ * @param {string} defaultIp - The default IP address to use if no file exists.
+ * @returns {Promise<string>} - The selected or entered IP address.
+ */
+async function getRobotIp(directoryPath, defaultIp = "192.168.10.124") {
+    const fileName = "ip.txt";
+    const filePath = path.join(directoryPath, fileName);
+
+    let fileIpAddress;
+
+    // Check if ip.txt exists in the directory
+    if (fs.existsSync(filePath)) {
+        try {
+            const fileContent = fs.readFileSync(filePath, 'utf8').trim();
+            if (fileContent) {
+                fileIpAddress = fileContent;
+            } else {
+                vscode.window.showWarningMessage(`The file ${fileName} is empty.`);
+            }
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to read ${fileName}: ${error.message}`);
+        }
+    } else {
+        const createFile = await vscode.window.showQuickPick(
+            [
+                { label: 'Yes', description: `Create ${fileName}` },
+                { label: 'No', description: 'Do not create the file' }
+            ],
+            {
+                placeHolder: `The file ${fileName} was not found. Would you like to create it?`,
+                canPickMany: false
+            }
+        );
+
+        if (createFile && createFile.label === 'Yes') {
+            const newIp = await vscode.window.showInputBox({
+                prompt: 'Enter an IP address to save in the new file:',
+                placeHolder: `e.g., ${defaultIp}`,
+                value: defaultIp,
+                validateInput: value => {
+                    const ipPattern = /^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$/;
+                    return ipPattern.test(value) ? null : 'Please enter a valid IP address.';
+                }
+            });
+
+            if (newIp) {
+                try {
+                    // Ensure the directory exists
+                    fs.mkdirSync(directoryPath, { recursive: true });
+                    // Create the file with the entered IP address
+                    fs.writeFileSync(filePath, newIp, 'utf8');
+                    vscode.window.showInformationMessage(`File ${fileName} created at ${filePath} with IP address: ${newIp}`);
+                    fileIpAddress = newIp;
+                } catch (error) {
+                    vscode.window.showErrorMessage(`Failed to create ${fileName}: ${error.message}`);
+                }
+            } else {
+                vscode.window.showWarningMessage('No IP address entered. File creation skipped.');
+            }
+        } else {
+            vscode.window.showInformationMessage('File creation skipped.');
+        }
+    }
+
+    if (!fileIpAddress) {
+        // Prompt user to select or enter an IP address if no IP is retrieved from the file
+        const ipOptions = [
+            { label: defaultIp, description: 'Default IP address' },
+            { label: "192.168.95.112", description: 'Aggressive Hydraulics' },
+            { label: "127.0.0.2", description: 'RoboGuide LoopBack' },
+            { label: 'Other', description: 'Enter a custom IP address' }
+        ];
+
+        const selectedIp = await vscode.window.showQuickPick(ipOptions, {
+            placeHolder: 'Select the robot\'s IP address or choose "Other" to enter a custom IP.',
+            canPickMany: false
+        });
+
+        if (!selectedIp) {
+            throw new Error('An IP address selection is required.');
+        }
+
+        let ipAddress = selectedIp.label;
+
+        if (ipAddress === 'Other') {
+            const customIp = await vscode.window.showInputBox({
+                prompt: 'Enter the custom IP address:',
+                placeHolder: 'e.g., 192.168.1.1',
+                validateInput: value => {
+                    const ipPattern = /^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$/;
+                    return ipPattern.test(value) ? null : 'Please enter a valid IP address.';
+                }
+            });
+
+            if (!customIp) {
+                throw new Error('A custom IP address is required.');
+            }
+
+            ipAddress = customIp;
+        }
+
+        return ipAddress;
+    }
+
+    return fileIpAddress;
+}
+
 
 function deactivate() {}
 

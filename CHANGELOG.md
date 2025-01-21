@@ -7,3 +7,4 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 ## [Unreleased]
 
 - Initial release
+- 0.3.0 Added ip.txt file check to get a default IP if the FIle exsists and if not will prompt user if we should create one. 
