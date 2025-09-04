@@ -313,8 +313,9 @@ async function f_uploadToRobot(uri, isFolder) {
 
     const selectedPath = uri.fsPath;
 
+    let client;
     try {
-        const client = new ftp.Client();
+        client = new ftp.Client();
         client.ftp.verbose = true;
         await client.access({
             host: ipAddress,
@@ -345,13 +346,18 @@ async function f_uploadToRobot(uri, isFolder) {
             outputChannel.appendLine(`Uploading file: ${path.basename(selectedPath)}`);
             await client.uploadFrom(selectedPath, path.basename(selectedPath));
         }
-
-        outputChannel.appendLine("BYE: Closing connection.");
-        client.close();
-        
         vscode.window.showInformationMessage(`File(s) uploaded successfully to ${ipAddress}`);
     } catch (error) {
         vscode.window.showErrorMessage(`Error: ${error.message}`);
+    } finally {
+        if (client) {
+            try {
+                outputChannel.appendLine("BYE: Closing connection.");
+                client.close();
+            } catch (e) {
+                // ignore close errors
+            }
+        }
     }
 }
 
@@ -382,11 +388,11 @@ async function f_downloadFromRobot(destinationUri, isFolder, fileType, saveType)
 
     const dateFolderPath = path.join(destinationPath, folderName );
 
+    let client;
     try {
         // Ensure the folder is created
         fs.mkdirSync(dateFolderPath, { recursive: true });
-
-        const client = new ftp.Client();
+        client = new ftp.Client();
         client.ftp.verbose = true;
         await client.access({
             host: ipAddress,
@@ -412,13 +418,18 @@ async function f_downloadFromRobot(destinationUri, isFolder, fileType, saveType)
                 }
             }
         }
-        
-        outputChannel.appendLine("BYE: Closing connection.");
-        client.close();
-
         vscode.window.showInformationMessage(`${fileType === "*" ? "All" : fileType} files downloaded successfully to ${dateFolderPath}`);
     } catch (error) {
         vscode.window.showErrorMessage(`Error: ${error.message}`);
+    } finally {
+        if (client) {
+            try {
+                outputChannel.appendLine("BYE: Closing connection.");
+                client.close();
+            } catch (e) {
+                // ignore close errors
+            }
+        }
     }
 }
 
@@ -449,8 +460,9 @@ async function f_updateFilesFromRobot(isFolder, fileType, saveType) {
          return; // Exit the function if IP retrieval fails
      }
      
+    let client;
     try {
-        const client = new ftp.Client();
+        client = new ftp.Client();
         client.ftp.verbose = true;
         await client.access({
             host: ipAddress,
@@ -487,13 +499,18 @@ async function f_updateFilesFromRobot(isFolder, fileType, saveType) {
                 }
             }
         }
-
-        outputChannel.appendLine("BYE: Closing connection.");
-        client.close();
-
         vscode.window.showInformationMessage(`${fileType === "*" ? "All" : fileType} files downloaded successfully to ${destinationPath}`);
     } catch (error) {
         vscode.window.showErrorMessage(`Error: ${error.message}`);
+    } finally {
+        if (client) {
+            try {
+                outputChannel.appendLine("BYE: Closing connection.");
+                client.close();
+            } catch (e) {
+                // ignore close errors
+            }
+        }
     }
 }
 
@@ -523,8 +540,9 @@ async function f_updateSelectedFileFromRobot(uri, fileType, saveType) {
         return;
     }
 
+    let client;
     try {
-        const client = new ftp.Client();
+        client = new ftp.Client();
         client.ftp.verbose = true;
         await client.access({
             host: ipAddress,
@@ -550,7 +568,6 @@ async function f_updateSelectedFileFromRobot(uri, fileType, saveType) {
 
         if (filteredFiles.length === 0) {
             vscode.window.showInformationMessage(`No files of type "${fileType}" found on the robot.`);
-            client.close();
             return;
         }
 
@@ -563,7 +580,6 @@ async function f_updateSelectedFileFromRobot(uri, fileType, saveType) {
 
         if (!selectedFile) {
             vscode.window.showErrorMessage("No file selected.");
-            client.close();
             return;
         }
 
@@ -574,9 +590,17 @@ async function f_updateSelectedFileFromRobot(uri, fileType, saveType) {
         outputChannel.appendLine("Download complete.");
         vscode.window.showInformationMessage(`File "${selectedFile}" downloaded successfully to ${destinationPath}`);
 
-        client.close();
     } catch (error) {
         vscode.window.showErrorMessage(`Error: ${error.message}`);
+    } finally {
+        if (client) {
+            try {
+                outputChannel.appendLine("BYE: Closing connection.");
+                client.close();
+            } catch (e) {
+                // ignore close errors
+            }
+        }
     }
 }
 
